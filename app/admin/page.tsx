@@ -18,6 +18,7 @@ export default function AdminPanel() {
   const [password, setPassword] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -31,34 +32,44 @@ export default function AdminPanel() {
   });
 
   const fetchProducts = async () => {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const data = await res.json();
-    setProducts(data);
+    try {
+      setError("");
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setProducts(data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Could not load products. Check your Supabase connection.");
+    }
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  const handleImageUpload = (e: any) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => setForm(prev => ({...prev, imagePreview: ev.target?.result as string}));
+      reader.onload = (ev) => setForm(prev => ({ ...prev, imagePreview: ev.target?.result as string }));
       reader.readAsDataURL(file);
     }
   };
 
   const saveProduct = async () => {
     if (!form.name || !form.price || !form.description || !form.imagePreview) {
-      alert("Fill all fields");
+      alert("Please fill all fields");
       return;
     }
 
     setLoading(true);
-
     const payload = {
       name: form.name,
       price: Number(form.price),
@@ -71,31 +82,36 @@ export default function AdminPanel() {
     };
 
     try {
-      if (editingId) {
-        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}`, {
-          method: "PATCH",
-          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      } else {
-        await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-          method: "POST",
-          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      }
+      const method = editingId ? "PATCH" : "POST";
+      const url = editingId 
+        ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}` 
+        : `${SUPABASE_URL}/rest/v1/products`;
+
+      await fetch(url, {
+        method,
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       fetchProducts();
       resetForm();
-      alert(editingId ? "Updated!" : "Product Added!");
+      alert(editingId ? "Product Updated!" : "Product Added Successfully!");
     } catch (err) {
-      alert("Failed to save");
+      alert("Failed to save product. Check console.");
+      console.error(err);
     }
     setLoading(false);
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", category: "Clothes", gender: "Women", size: "", color: "", description: "", imagePreview: "" });
+    setForm({
+      name: "", price: "", category: "Clothes", gender: "Women",
+      size: "", color: "", description: "", imagePreview: ""
+    });
     setEditingId(null);
   };
 
@@ -109,15 +125,16 @@ export default function AdminPanel() {
       size: p.size || "",
       color: p.color || "",
       description: p.description,
-      imagePreview: p.images[0]
+      imagePreview: p.images[0],
     });
   };
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
-          <h1 className="text-4xl font-bold text-center mb-6">TESSY LUXE</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full">
+          <h1 className="text-4xl font-bold text-center mb-2">TESSY LUXE</h1>
+          <p className="text-center text-gray-600 mb-8">Admin Dashboard</p>
           <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="mb-6" />
           <Button onClick={() => setIsLoggedIn(password === ADMIN_PASSWORD)} className="w-full py-6">Login</Button>
         </div>
@@ -127,27 +144,29 @@ export default function AdminPanel() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-      <div className="flex justify-between mb-10">
+      <div className="flex justify-between items-center mb-10">
         <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-        <Button onClick={() => setIsLoggedIn(false)}>Logout</Button>
+        <Button variant="outline" onClick={() => setIsLoggedIn(false)}>Logout</Button>
       </div>
 
-      {/* Add/Edit Form */}
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      {/* Form */}
       <div className="bg-white p-8 rounded-2xl shadow mb-12">
         <h2 className="text-2xl font-semibold mb-6">{editingId ? "Edit Product" : "Add New Product"}</h2>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           <Input placeholder="Product Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-          <Input type="number" placeholder="Price" value={form.price} onChange={e => setForm({...form, price: e.target.value})} />
+          <Input type="number" placeholder="Price (₦)" value={form.price} onChange={e => setForm({...form, price: e.target.value})} />
 
-          <select value={form.category} onChange={e => setForm({...form, category: e.target.value as any})} className="border p-3 rounded-xl">
+          <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="border rounded-xl px-4 py-3">
             <option value="Clothes">Clothes</option>
             <option value="Bags">Bags</option>
             <option value="Shoes">Shoes</option>
             <option value="Accessories">Accessories</option>
           </select>
 
-          <select value={form.gender} onChange={e => setForm({...form, gender: e.target.value as any})} className="border p-3 rounded-xl">
+          <select value={form.gender} onChange={e => setForm({...form, gender: e.target.value})} className="border rounded-xl px-4 py-3">
             <option value="Women">Women</option>
             <option value="Men">Men</option>
             <option value="Unisex">Unisex</option>
@@ -157,30 +176,30 @@ export default function AdminPanel() {
           <Input placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} />
 
           <div className="md:col-span-2">
-            <input type="file" accept="image/*" onChange={handleImageUpload} />
-            {form.imagePreview && <img src={form.imagePreview} className="mt-4 h-48" />}
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full" />
+            {form.imagePreview && <img src={form.imagePreview} alt="preview" className="mt-4 max-h-60 rounded" />}
           </div>
 
-          <Textarea placeholder="Description" value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="md:col-span-2" />
+          <Textarea placeholder="Description" className="md:col-span-2" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
         </div>
 
-        <Button onClick={saveProduct} disabled={loading} className="mt-6 w-full">
-          {loading ? "Saving..." : editingId ? "Update" : "Add Product"}
+        <Button onClick={saveProduct} disabled={loading} className="mt-8 w-full py-6">
+          {loading ? "Saving..." : editingId ? "Update Product" : "Add Product"}
         </Button>
       </div>
 
-      {/* Products List */}
       <h2 className="text-2xl font-semibold mb-6">All Products ({products.length})</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map(p => (
-          <div key={p.id} className="border rounded-2xl overflow-hidden">
-            <img src={p.images[0]} className="w-full h-52 object-cover" />
-            <div className="p-4">
-              <h3 className="font-semibold">{p.name}</h3>
-              <p className="text-rose-600 font-bold">₦{p.price.toLocaleString()}</p>
-              <div className="flex gap-3 mt-4">
-                <Button size="sm" onClick={() => editProduct(p)}>Edit</Button>
-                <Button size="sm" variant="destructive" onClick={() => confirm("Delete?") && fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${p.id}`, { method: "DELETE", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }}).then(fetchProducts)}>Delete</Button>
+        {products.map(product => (
+          <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow border">
+            <img src={product.images[0]} alt={product.name} className="w-full h-52 object-cover" />
+            <div className="p-5">
+              <h3 className="font-semibold">{product.name}</h3>
+              <p className="text-rose-600 font-bold">₦{product.price?.toLocaleString()}</p>
+              <div className="flex gap-3 mt-6">
+                <Button size="sm" variant="outline" onClick={() => editProduct(product)}>Edit</Button>
+                <Button size="sm" variant="destructive" onClick={() => confirm("Delete?") && fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${product.id}`, { method: "DELETE", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }}).then(fetchProducts)}>Delete</Button>
               </div>
             </div>
           </div>
