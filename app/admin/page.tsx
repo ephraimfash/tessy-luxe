@@ -32,23 +32,33 @@ export default function AdminPanel() {
   });
 
   const fetchProducts = async () => {
-    try {
-      setError("");
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-      });
+  try {
+    setError("");
+    console.log("Fetching from:", `${SUPABASE_URL}/rest/v1/products`);
 
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setProducts(data || []);
-    } catch (err) {
-      console.error(err);
-      setError("Could not load products. Check your Supabase connection.");
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+
+    console.log("Response status:", res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Error response:", errorText);
+      throw new Error(`HTTP ${res.status}`);
     }
-  };
+
+    const data = await res.json();
+    console.log("Products loaded:", data);
+    setProducts(data || []);
+  } catch (err: any) {
+    console.error("Fetch error:", err);
+    setError("Failed to load products: " + err.message);
+  }
+};
 
   useEffect(() => {
     fetchProducts();
