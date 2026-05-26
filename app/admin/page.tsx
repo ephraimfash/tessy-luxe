@@ -20,29 +20,23 @@ export default function AdminPanel() {
   const [form, setForm] = useState({
     name: "",
     price: "",
-    category: "Clothes" as any,
-    gender: "Women" as any,
+    category: "Clothes",
+    gender: "Women",
     size: "",
     color: "",
     description: "",
     imagePreview: "",
   });
 
-  // Load from localStorage
+  // Load products
   useEffect(() => {
     const saved = localStorage.getItem("tessyLuxeProducts");
-    if (saved) {
-      setProducts(JSON.parse(saved));
-    } else {
-      import("@/app/data/products").then(({ products: initial }) => setProducts(initial));
-    }
+    if (saved) setProducts(JSON.parse(saved));
   }, []);
 
   // Auto save
   useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem("tessyLuxeProducts", JSON.stringify(products));
-    }
+    localStorage.setItem("tessyLuxeProducts", JSON.stringify(products));
   }, [products]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +54,7 @@ export default function AdminPanel() {
       return;
     }
 
-    const newProduct: Product = {
+    const newProduct = {
       id: editingId || Date.now().toString(),
       name: form.name,
       price: Number(form.price),
@@ -79,13 +73,11 @@ export default function AdminPanel() {
     }
 
     resetForm();
-    alert(editingId ? "Updated!" : "Added Successfully!");
+    alert("Product Saved!");
   };
 
   const deleteProduct = (id: string) => {
-    if (confirm("Delete this product?")) {
-      setProducts(products.filter(p => p.id !== id));
-    }
+    if (confirm("Delete?")) setProducts(products.filter(p => p.id !== id));
   };
 
   const resetForm = () => {
@@ -127,7 +119,6 @@ export default function AdminPanel() {
         <Button variant="outline" onClick={() => setIsLoggedIn(false)}>Logout</Button>
       </div>
 
-      {/* Form */}
       <div className="bg-white p-8 rounded-2xl shadow mb-12">
         <h2 className="text-2xl font-semibold mb-6">{editingId ? "Edit Product" : "Add New Product"}</h2>
 
@@ -156,8 +147,9 @@ export default function AdminPanel() {
           <Input placeholder="Color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} />
 
           <div className="md:col-span-2">
+            <label className="block mb-2">Product Image</label>
             <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full" />
-            {form.imagePreview && <img src={form.imagePreview} className="mt-4 max-h-60 rounded-lg" />}
+            {form.imagePreview && <img src={form.imagePreview} alt="preview" className="mt-4 max-h-60 rounded-lg" />}
           </div>
 
           <Textarea placeholder="Description" className="md:col-span-2" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
