@@ -128,21 +128,81 @@ export default function AdminPanel() {
   };
 
   // SAVE PRODUCT
-  const saveProduct = async () => {
+const saveProduct = async () => {
 
-    if (
-      !form.name ||
-      !form.price ||
-      !form.description ||
-      !form.imagePreview
-    ) {
+  if (
+    !form.name ||
+    !form.price ||
+    !form.description ||
+    !form.imagePreview
+  ) {
 
-      alert("Please fill all fields");
+    alert("Please fill all fields");
 
-      return;
+    return;
+  }
+
+  setLoading(true);
+
+  const payload = {
+    name: form.name,
+    price: Number(form.price),
+    category: form.category,
+    gender: form.gender,
+    size: form.size || null,
+    color: form.color || null,
+    description: form.description,
+    images: form.imagePreview,
+  };
+
+  try {
+
+    const method =
+      editingId ? "PATCH" : "POST";
+
+    const url = editingId
+      ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}`
+      : `${SUPABASE_URL}/rest/v1/products`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+
+      throw new Error(
+        "Failed to save product"
+      );
     }
 
-    setLoading(true);
+    await fetchProducts();
+
+    resetForm();
+
+    alert(
+      editingId
+        ? "Product Updated!"
+        : "Product Added!"
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Something went wrong");
+
+  }
+
+  setLoading(false);
+};
 
     const payload = {
       name: form.name,
@@ -165,6 +225,8 @@ export default function AdminPanel() {
         : `${SUPABASE_URL}/rest/v1/products`;
 
       const res = await fetch(url, {
+  cache: "no-store",
+}) {
         method,
         headers: {
           apikey: SUPABASE_KEY,
