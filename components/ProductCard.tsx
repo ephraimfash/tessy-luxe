@@ -1,17 +1,19 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/app/data/products";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border">
       <Link href={`/product/${product.id}`}>
-        <div className="relative h-80 overflow-hidden">
-          <Image
-            src={product.images[0]}
+        <div className="relative h-80 overflow-hidden bg-gray-100 flex items-center justify-center">
+          <img 
+            src={product.images[0]} 
             alt={product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              e.currentTarget.src = "https://picsum.photos/id/1015/800/800";
+            }}
+            crossOrigin="anonymous"
           />
           {product.featured && (
             <div className="absolute top-4 left-4 bg-rose-600 text-white text-xs px-3 py-1 rounded-full">
