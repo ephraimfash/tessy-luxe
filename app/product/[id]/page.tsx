@@ -30,9 +30,9 @@ export default function ProductDetail() {
 
       try {
 
-        const id = params?.id;
+        const id = Number(params?.id);
 
-        if (!id) return;
+        if (isNaN(id)) return;
 
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/products?select=*&id=eq.${id}`,
