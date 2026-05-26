@@ -1,45 +1,60 @@
 import Link from "next/link";
-import { Product } from "@/app/data/products";
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+}: {
+  product: any;
+}) {
+
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border">
+
       <Link href={`/product/${product.id}`}>
+
         <div className="relative h-80 overflow-hidden bg-gray-100 flex items-center justify-center">
-          <img 
-            src={product.images[0]} 
-            alt={product.name}
+
+          <img
+            src={product.images || "/placeholder.jpg"}
+            alt={product.name || "Product"}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              e.currentTarget.src = "https://picsum.photos/id/1015/800/800";
-            }}
-            crossOrigin="anonymous"
           />
+
           {product.featured && (
             <div className="absolute top-4 left-4 bg-rose-600 text-white text-xs px-3 py-1 rounded-full">
               Featured
             </div>
           )}
+
         </div>
+
       </Link>
 
       <div className="p-6">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg leading-tight">{product.name}</h3>
-          <p className="text-xl font-bold text-rose-600">
-            ₦{product.price.toLocaleString()}
+
+        <div className="flex justify-between items-start gap-4 mb-2">
+
+          <h3 className="font-semibold text-lg leading-tight">
+            {product.name}
+          </h3>
+
+          <p className="text-xl font-bold text-rose-600 whitespace-nowrap">
+            ₦{Number(product.price).toLocaleString()}
           </p>
+
         </div>
-        
+
         <p className="text-sm text-gray-500 mb-4 line-clamp-2">
           {product.description}
         </p>
 
         <Link href={`/product/${product.id}`}>
+
           <button className="w-full border border-gray-300 hover:border-black py-3 rounded-xl text-sm font-medium transition-colors">
             View Details
           </button>
+
         </Link>
+
       </div>
     </div>
   );
