@@ -47,7 +47,7 @@ export default function ProductCard({
           {product.description}
         </p>
 
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${String(product.id)}`}>
 
           <button className="w-full border border-gray-300 hover:border-black py-3 rounded-xl text-sm font-medium transition-colors">
             View Details
