@@ -1,19 +1,77 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { ArrowLeft } from "lucide-react";
 
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+const SUPABASE_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
 export default function ProductDetail() {
 
-  const searchParams = useSearchParams();
+  const params = useParams();
 
-  const data = searchParams.get("data");
+  const [product, setProduct] = useState<any>(null);
 
-  if (!data) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    async function fetchAllProducts() {
+
+      try {
+
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=*`,
+          {
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        const found = data.find(
+          (p: any) =>
+            String(p.id) === String(params.id)
+        );
+
+        setProduct(found || null);
+
+      } catch (err) {
+
+        console.error(err);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+    }
+
+    fetchAllProducts();
+
+  }, [params.id]);
+
+  if (loading) {
+
+    return (
+      <div className="text-center py-20">
+        Loading product...
+      </div>
+    );
+  }
+
+  if (!product) {
 
     return (
       <div className="text-center py-20">
@@ -32,10 +90,6 @@ export default function ProductDetail() {
       </div>
     );
   }
-
-  const product = JSON.parse(
-    decodeURIComponent(data)
-  );
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
