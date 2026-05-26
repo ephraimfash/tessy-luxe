@@ -49,32 +49,32 @@ export default function AdminPanel() {
   };
 
   const saveProduct = () => {
-    if (!form.name || !form.price || !form.description || !form.imagePreview) {
-      alert("Please fill all fields");
-      return;
-    }
+  if (!form.name || !form.price || !form.description || !form.imagePreview) {
+    alert("Please fill all fields");
+    return;
+  }
 
-    const newProduct = {
-      id: editingId || Date.now().toString(),
-      name: form.name,
-      price: Number(form.price),
-      category: form.category,
-      gender: form.gender,
-      size: form.size || undefined,
-      color: form.color || undefined,
-      description: form.description,
-      images: [form.imagePreview],
-    };
-
-    if (editingId) {
-      setProducts(products.map(p => p.id === editingId ? newProduct : p));
-    } else {
-      setProducts([...products, newProduct]);
-    }
-
-    resetForm();
-    alert("Product Saved!");
+  const newProduct: Product = {
+    id: editingId || Date.now().toString(),
+    name: form.name,
+    price: Number(form.price),
+    category: form.category as "Clothes" | "Bags" | "Shoes" | "Accessories",
+    gender: form.gender as "Men" | "Women" | "Unisex",
+    size: form.size || undefined,
+    color: form.color || undefined,
+    description: form.description,
+    images: [form.imagePreview],
   };
+
+  if (editingId) {
+    setProducts(products.map(p => p.id === editingId ? newProduct : p));
+  } else {
+    setProducts([...products, newProduct]);
+  }
+
+  resetForm();
+  alert(editingId ? "Product Updated!" : "Product Added Successfully!");
+};
 
   const deleteProduct = (id: string) => {
     if (confirm("Delete?")) setProducts(products.filter(p => p.id !== id));
