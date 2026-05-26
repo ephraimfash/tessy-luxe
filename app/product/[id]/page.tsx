@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,23 +14,25 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export default function ProductDetail({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ProductDetail() {
 
-  const [product, setProduct] = useState<any>(null);
+  const params = useParams();
 
-  const [loading, setLoading] = useState(true);
+  const id = params?.id;
+
+  const [product, setProduct] =
+    useState<any>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
+
+    if (!id) return;
 
     const fetchProduct = async () => {
 
       try {
-
-        const { id } = await params;
 
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/products?id=eq.${id}&select=*`,
@@ -48,7 +51,9 @@ export default function ProductDetail({
         }
 
       } catch (err) {
+
         console.error(err);
+
       }
 
       setLoading(false);
@@ -56,10 +61,11 @@ export default function ProductDetail({
 
     fetchProduct();
 
-  }, [params]);
+  }, [id]);
 
   // LOADING
   if (loading) {
+
     return (
       <div className="text-center py-20">
         Loading product...
@@ -69,6 +75,7 @@ export default function ProductDetail({
 
   // NOT FOUND
   if (!product) {
+
     return (
       <div className="text-center py-20">
 
@@ -90,10 +97,10 @@ export default function ProductDetail({
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
 
-      {/* BACK BUTTON */}
+      {/* BACK */}
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition-colors"
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-black mb-8"
       >
         <ArrowLeft size={20} />
         Back to Shop
@@ -105,8 +112,11 @@ export default function ProductDetail({
         <div className="relative aspect-square rounded-3xl overflow-hidden border shadow-lg bg-gray-100">
 
           <Image
-            src={product.images || "/placeholder.jpg"}
-            alt={product.name || "Product"}
+            src={
+              product.images ||
+              "/placeholder.jpg"
+            }
+            alt={product.name}
             fill
             className="object-cover"
             unoptimized
@@ -122,35 +132,31 @@ export default function ProductDetail({
             {product.category}
           </span>
 
-          <h1 className="text-4xl font-bold mt-3 leading-tight">
+          <h1 className="text-4xl font-bold mt-3">
             {product.name}
           </h1>
 
           <p className="text-3xl font-semibold text-rose-600 mt-6">
-            ₦{Number(product.price).toLocaleString()}
+            ₦
+            {Number(
+              product.price
+            ).toLocaleString()}
           </p>
 
-          {(product.gender ||
-            product.size ||
-            product.color) && (
-            <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 mt-4">
+            {product.gender}
 
-              {product.gender}
+            {product.size &&
+              ` • ${product.size}`}
 
-              {product.size &&
-                ` • ${product.size}`}
-
-              {product.color &&
-                ` • ${product.color}`}
-
-            </p>
-          )}
+            {product.color &&
+              ` • ${product.color}`}
+          </p>
 
           <p className="text-gray-600 leading-relaxed mt-8 text-lg">
             {product.description}
           </p>
 
-          {/* WHATSAPP */}
           <div className="mt-10">
 
             <WhatsAppButton
@@ -158,13 +164,6 @@ export default function ProductDetail({
               price={product.price}
             />
 
-          </div>
-
-          {/* EXTRA INFO */}
-          <div className="mt-8 text-sm text-gray-500 space-y-1">
-            <p>✅ Order via WhatsApp</p>
-            <p>✅ Payment on delivery available</p>
-            <p>✅ Quality guaranteed</p>
           </div>
 
         </div>
