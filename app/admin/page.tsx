@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product } from "@/app/data/products";
+
 import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ const commonSizes = [
 ];
 
 export default function AdminPanel() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
