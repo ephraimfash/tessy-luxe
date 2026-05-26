@@ -18,7 +18,6 @@ export default function AdminPanel() {
   const [password, setPassword] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -41,10 +40,8 @@ export default function AdminPanel() {
       });
       const data = await res.json();
       setProducts(data || []);
-      setError("");
     } catch (err) {
       console.error(err);
-      setError("Failed to load products");
     }
   };
 
@@ -52,11 +49,11 @@ export default function AdminPanel() {
     fetchProducts();
   }, []);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => setForm(prev => ({...prev, imagePreview: ev.target.result}));
+      reader.onload = (ev) => setForm(prev => ({...prev, imagePreview: ev.target?.result as string }));
       reader.readAsDataURL(file);
     }
   };
@@ -68,7 +65,6 @@ export default function AdminPanel() {
     }
 
     setLoading(true);
-    setError("");
 
     const payload = {
       name: form.name,
@@ -87,7 +83,7 @@ export default function AdminPanel() {
         ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}` 
         : `${SUPABASE_URL}/rest/v1/products`;
 
-      const res = await fetch(url, {
+      await fetch(url, {
         method,
         headers: {
           apikey: SUPABASE_KEY,
@@ -97,21 +93,19 @@ export default function AdminPanel() {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error("Failed to save");
-
       fetchProducts();
       resetForm();
       alert(editingId ? "Updated!" : "Added Successfully!");
     } catch (err) {
+      alert("Failed to save. Check console (F12)");
       console.error(err);
-      setError("Save failed. Check console");
-      alert("Save failed. Check console (F12)");
     }
     setLoading(false);
   };
 
   const deleteProduct = async (id) => {
-    if (!confirm("Delete?")) return;
+    if (!confirm("Delete this product?")) return;
+
     await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
       method: "DELETE",
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
@@ -157,8 +151,6 @@ export default function AdminPanel() {
         <h1 className="text-4xl font-bold">Admin Dashboard</h1>
         <Button variant="outline" onClick={() => setIsLoggedIn(false)}>Logout</Button>
       </div>
-
-      {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <div className="bg-white p-8 rounded-2xl shadow mb-12">
         <h2 className="text-2xl font-semibold mb-6">{editingId ? "Edit Product" : "Add New Product"}</h2>
