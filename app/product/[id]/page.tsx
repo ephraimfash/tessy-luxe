@@ -1,84 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { ArrowLeft } from "lucide-react";
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-const SUPABASE_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 export default function ProductDetail() {
 
-  const params = useParams();
+  const searchParams = useSearchParams();
 
-  const [product, setProduct] =
-    useState<any>(null);
+  const data = searchParams.get("data");
 
-  const [loading, setLoading] =
-    useState(true);
-
-  useEffect(() => {
-
-    const fetchProduct = async () => {
-
-      try {
-
-        const id = Number(params?.id);
-
-        if (isNaN(id)) return;
-
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/products?select=*&id=eq.${id}`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
-
-        const data = await res.json();
-
-        console.log("Fetched Product:", data);
-
-        if (data && data.length > 0) {
-          setProduct(data[0]);
-        }
-
-      } catch (err) {
-
-        console.error(err);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-    };
-
-    fetchProduct();
-
-  }, [params]);
-
-  // LOADING
-  if (loading) {
-
-    return (
-      <div className="text-center py-20">
-        Loading product...
-      </div>
-    );
-  }
-
-  // NOT FOUND
-  if (!product) {
+  if (!data) {
 
     return (
       <div className="text-center py-20">
@@ -98,6 +33,10 @@ export default function ProductDetail() {
     );
   }
 
+  const product = JSON.parse(
+    decodeURIComponent(data)
+  );
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
 
@@ -111,7 +50,6 @@ export default function ProductDetail() {
 
       <div className="grid md:grid-cols-2 gap-12">
 
-        {/* IMAGE */}
         <div className="relative aspect-square rounded-3xl overflow-hidden border shadow-lg bg-gray-100">
 
           <Image
@@ -125,7 +63,6 @@ export default function ProductDetail() {
 
         </div>
 
-        {/* DETAILS */}
         <div className="flex flex-col">
 
           <span className="uppercase tracking-widest text-rose-600 text-sm font-medium">

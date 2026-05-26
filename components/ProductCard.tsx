@@ -1,21 +1,21 @@
 import Link from "next/link";
 
-export default function ProductCard({
-  product,
-}: {
-  product: any;
-}) {
+export default function ProductCard({ product }: any) {
+
+  const encodedProduct = encodeURIComponent(
+    JSON.stringify(product)
+  );
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border">
 
-      <Link href={`/product/${product.id}`}>
+      <Link href={`/product/${product.id}?data=${encodedProduct}`}>
 
         <div className="relative h-80 overflow-hidden bg-gray-100 flex items-center justify-center">
 
           <img
-            src={product.images || "/placeholder.jpg"}
-            alt={product.name || "Product"}
+            src={product.images}
+            alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
@@ -31,13 +31,13 @@ export default function ProductCard({
 
       <div className="p-6">
 
-        <div className="flex justify-between items-start gap-4 mb-2">
+        <div className="flex justify-between items-start mb-2">
 
           <h3 className="font-semibold text-lg leading-tight">
             {product.name}
           </h3>
 
-          <p className="text-xl font-bold text-rose-600 whitespace-nowrap">
+          <p className="text-xl font-bold text-rose-600">
             ₦{Number(product.price).toLocaleString()}
           </p>
 
@@ -47,7 +47,7 @@ export default function ProductCard({
           {product.description}
         </p>
 
-        <Link href={`/product/${String(product.id)}`}>
+        <Link href={`/product/${product.id}?data=${encodedProduct}`}>
 
           <button className="w-full border border-gray-300 hover:border-black py-3 rounded-xl text-sm font-medium transition-colors">
             View Details
