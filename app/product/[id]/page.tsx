@@ -18,8 +18,6 @@ export default function ProductDetail() {
 
   const params = useParams();
 
-  const id = params?.id;
-
   const [product, setProduct] =
     useState<any>(null);
 
@@ -28,14 +26,16 @@ export default function ProductDetail() {
 
   useEffect(() => {
 
-    if (!id) return;
-
     const fetchProduct = async () => {
 
       try {
 
+        const id = params?.id;
+
+        if (!id) return;
+
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/products?id=eq.${id}&select=*`,
+          `${SUPABASE_URL}/rest/v1/products?select=*&id=eq.${id}`,
           {
             headers: {
               apikey: SUPABASE_KEY,
@@ -46,6 +46,8 @@ export default function ProductDetail() {
 
         const data = await res.json();
 
+        console.log("Fetched Product:", data);
+
         if (data && data.length > 0) {
           setProduct(data[0]);
         }
@@ -54,14 +56,16 @@ export default function ProductDetail() {
 
         console.error(err);
 
-      }
+      } finally {
 
-      setLoading(false);
+        setLoading(false);
+
+      }
     };
 
     fetchProduct();
 
-  }, [id]);
+  }, [params]);
 
   // LOADING
   if (loading) {
@@ -87,7 +91,7 @@ export default function ProductDetail() {
           href="/"
           className="text-rose-600 hover:underline mt-4 inline-block"
         >
-          ← Back to Shop
+          ← Return Home
         </Link>
 
       </div>
@@ -97,7 +101,6 @@ export default function ProductDetail() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
 
-      {/* BACK */}
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-black mb-8"
@@ -112,10 +115,7 @@ export default function ProductDetail() {
         <div className="relative aspect-square rounded-3xl overflow-hidden border shadow-lg bg-gray-100">
 
           <Image
-            src={
-              product.images ||
-              "/placeholder.jpg"
-            }
+            src={product.images}
             alt={product.name}
             fill
             className="object-cover"
@@ -137,20 +137,13 @@ export default function ProductDetail() {
           </h1>
 
           <p className="text-3xl font-semibold text-rose-600 mt-6">
-            ₦
-            {Number(
-              product.price
-            ).toLocaleString()}
+            ₦{Number(product.price).toLocaleString()}
           </p>
 
           <p className="text-gray-600 mt-4">
             {product.gender}
-
-            {product.size &&
-              ` • ${product.size}`}
-
-            {product.color &&
-              ` • ${product.color}`}
+            {product.size && ` • ${product.size}`}
+            {product.color && ` • ${product.color}`}
           </p>
 
           <p className="text-gray-600 leading-relaxed mt-8 text-lg">
