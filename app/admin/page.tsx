@@ -33,20 +33,11 @@ const commonSizes = [
 ];
 
 export default function AdminPanel() {
-
   const [products, setProducts] = useState<any[]>([]);
-
-  const [isLoggedIn, setIsLoggedIn] =
-    useState(false);
-
-  const [password, setPassword] =
-    useState("");
-
-  const [editingId, setEditingId] =
-    useState<number | null>(null);
-
-  const [loading, setLoading] =
-    useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [password, setPassword] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -61,9 +52,7 @@ export default function AdminPanel() {
 
   // FETCH PRODUCTS
   const fetchProducts = async () => {
-
     try {
-
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`,
         {
@@ -71,6 +60,7 @@ export default function AdminPanel() {
             apikey: SUPABASE_KEY,
             Authorization: `Bearer ${SUPABASE_KEY}`,
           },
+          cache: "no-store",
         }
       );
 
@@ -79,13 +69,9 @@ export default function AdminPanel() {
       setProducts(data || []);
 
       return data || [];
-
     } catch (err) {
-
       console.error(err);
-
       return [];
-
     }
   };
 
@@ -98,111 +84,41 @@ export default function AdminPanel() {
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-
     const file = e.target.files?.[0];
 
     if (!file) return;
 
     // LIMIT SIZE
     if (file.size > 2000000) {
-
-      alert(
-        "Image too large. Use image below 2MB."
-      );
-
+      alert("Image too large. Use image below 2MB.");
       return;
     }
 
     const reader = new FileReader();
 
     reader.onloadend = () => {
-
       setForm((prev) => ({
         ...prev,
         imagePreview: reader.result as string,
       }));
-
     };
 
     reader.readAsDataURL(file);
   };
 
   // SAVE PRODUCT
-const saveProduct = async () => {
-
-  if (
-    !form.name ||
-    !form.price ||
-    !form.description ||
-    !form.imagePreview
-  ) {
-
-    alert("Please fill all fields");
-
-    return;
-  }
-
-  setLoading(true);
-
-  const payload = {
-    name: form.name,
-    price: Number(form.price),
-    category: form.category,
-    gender: form.gender,
-    size: form.size || null,
-    color: form.color || null,
-    description: form.description,
-    images: form.imagePreview,
-  };
-
-  try {
-
-    const method =
-      editingId ? "PATCH" : "POST";
-
-    const url = editingId
-      ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}`
-      : `${SUPABASE_URL}/rest/v1/products`;
-
-    const res = await fetch(url, {
-      method,
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-
-      throw new Error(
-        "Failed to save product"
-      );
+  const saveProduct = async () => {
+    if (
+      !form.name ||
+      !form.price ||
+      !form.description ||
+      !form.imagePreview
+    ) {
+      alert("Please fill all fields");
+      return;
     }
 
-    await fetchProducts();
-
-    resetForm();
-
-    alert(
-      editingId
-        ? "Product Updated!"
-        : "Product Added!"
-    );
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("Something went wrong");
-
-  }
-
-  setLoading(false);
-};
+    setLoading(true);
 
     const payload = {
       name: form.name,
@@ -216,7 +132,6 @@ const saveProduct = async () => {
     };
 
     try {
-
       const method =
         editingId ? "PATCH" : "POST";
 
@@ -225,8 +140,6 @@ const saveProduct = async () => {
         : `${SUPABASE_URL}/rest/v1/products`;
 
       const res = await fetch(url, {
-  cache: "no-store",
-}) {
         method,
         headers: {
           apikey: SUPABASE_KEY,
@@ -238,9 +151,7 @@ const saveProduct = async () => {
       });
 
       if (!res.ok) {
-        throw new Error(
-          "Failed to save product"
-        );
+        throw new Error("Failed to save product");
       }
 
       await fetchProducts();
@@ -252,13 +163,9 @@ const saveProduct = async () => {
           ? "Product Updated!"
           : "Product Added!"
       );
-
     } catch (err) {
-
       console.error(err);
-
       alert("Something went wrong");
-
     }
 
     setLoading(false);
@@ -268,14 +175,9 @@ const saveProduct = async () => {
   const deleteProduct = async (
     id: number
   ) => {
-
-    if (
-      !confirm("Delete this product?")
-    )
-      return;
+    if (!confirm("Delete this product?")) return;
 
     try {
-
       await fetch(
         `${SUPABASE_URL}/rest/v1/products?id=eq.${id}`,
         {
@@ -288,17 +190,13 @@ const saveProduct = async () => {
       );
 
       await fetchProducts();
-
     } catch (err) {
-
       console.error(err);
-
     }
   };
 
   // RESET FORM
   const resetForm = () => {
-
     setForm({
       name: "",
       price: "",
@@ -315,7 +213,6 @@ const saveProduct = async () => {
 
   // EDIT PRODUCT
   const editProduct = (p: any) => {
-
     setEditingId(p.id);
 
     setForm({
@@ -332,12 +229,9 @@ const saveProduct = async () => {
 
   // LOGIN PAGE
   if (!isLoggedIn) {
-
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-
         <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full">
-
           <h1 className="text-4xl font-bold text-center mb-2">
             TESSY LUXE
           </h1>
@@ -366,7 +260,6 @@ const saveProduct = async () => {
           >
             Login
           </Button>
-
         </div>
       </div>
     );
@@ -375,10 +268,8 @@ const saveProduct = async () => {
   // MAIN PAGE
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-
       {/* HEADER */}
       <div className="flex justify-between items-center mb-10">
-
         <h1 className="text-4xl font-bold">
           Admin Dashboard
         </h1>
@@ -391,12 +282,10 @@ const saveProduct = async () => {
         >
           Logout
         </Button>
-
       </div>
 
       {/* FORM */}
       <div className="bg-white p-8 rounded-2xl shadow mb-12">
-
         <h2 className="text-2xl font-semibold mb-6">
           {editingId
             ? "Edit Product"
@@ -404,7 +293,6 @@ const saveProduct = async () => {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-6">
-
           <Input
             placeholder="Product Name"
             value={form.name}
@@ -438,22 +326,12 @@ const saveProduct = async () => {
             }
             className="border rounded-xl px-4 py-3"
           >
-            <option value="Clothes">
-              Clothes
-            </option>
-
-            <option value="Bags">
-              Bags
-            </option>
-
-            <option value="Shoes">
-              Shoes
-            </option>
-
+            <option value="Clothes">Clothes</option>
+            <option value="Bags">Bags</option>
+            <option value="Shoes">Shoes</option>
             <option value="Accessories">
               Accessories
             </option>
-
           </select>
 
           <select
@@ -466,18 +344,9 @@ const saveProduct = async () => {
             }
             className="border rounded-xl px-4 py-3"
           >
-            <option value="Women">
-              Women
-            </option>
-
-            <option value="Men">
-              Men
-            </option>
-
-            <option value="Unisex">
-              Unisex
-            </option>
-
+            <option value="Women">Women</option>
+            <option value="Men">Men</option>
+            <option value="Unisex">Unisex</option>
           </select>
 
           <select
@@ -490,22 +359,18 @@ const saveProduct = async () => {
             }
             className="border rounded-xl px-4 py-3"
           >
-
             <option value="">
               Select Size
             </option>
 
             {commonSizes.map((s) => (
-
               <option
                 key={s}
                 value={s}
               >
                 {s}
               </option>
-
             ))}
-
           </select>
 
           <Input
@@ -521,7 +386,6 @@ const saveProduct = async () => {
 
           {/* IMAGE */}
           <div className="md:col-span-2">
-
             <label className="block mb-2">
               Product Image
             </label>
@@ -534,15 +398,12 @@ const saveProduct = async () => {
             />
 
             {form.imagePreview && (
-
               <img
                 src={form.imagePreview}
                 alt="preview"
                 className="mt-4 h-60 object-cover rounded-lg border"
               />
-
             )}
-
           </div>
 
           <Textarea
@@ -556,7 +417,6 @@ const saveProduct = async () => {
               })
             }
           />
-
         </div>
 
         <Button
@@ -570,7 +430,6 @@ const saveProduct = async () => {
             ? "Update Product"
             : "Add Product"}
         </Button>
-
       </div>
 
       {/* PRODUCTS */}
@@ -579,14 +438,11 @@ const saveProduct = async () => {
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
         {products.map((product) => (
-
           <div
-            key={`${product.id}-${product.name}`}
+            key={product.id}
             className="bg-white rounded-2xl overflow-hidden shadow border"
           >
-
             <img
               src={
                 product.images ||
@@ -597,7 +453,6 @@ const saveProduct = async () => {
             />
 
             <div className="p-5">
-
               <h3 className="font-semibold">
                 {product.name}
               </h3>
@@ -610,7 +465,6 @@ const saveProduct = async () => {
               </p>
 
               <div className="flex gap-3 mt-6">
-
                 <Button
                   size="sm"
                   variant="outline"
@@ -630,14 +484,10 @@ const saveProduct = async () => {
                 >
                   Delete
                 </Button>
-
               </div>
-
             </div>
           </div>
-
         ))}
-
       </div>
     </div>
   );
