@@ -36,7 +36,8 @@ export default function AdminPanel() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] =
+    useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -80,8 +81,8 @@ export default function AdminPanel() {
     fetchProducts();
   }, []);
 
-  // HANDLE IMAGE
-  const handleImageUpload = (
+  // HANDLE IMAGE UPLOAD
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
@@ -94,16 +95,38 @@ export default function AdminPanel() {
       return;
     }
 
-    const reader = new FileReader();
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
 
-    reader.onloadend = () => {
+      const uploadRes = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/products/${fileName}`,
+        {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": file.type,
+          },
+          body: file,
+        }
+      );
+
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const imageUrl =
+        `${SUPABASE_URL}/storage/v1/object/public/products/${fileName}`;
+
       setForm((prev) => ({
         ...prev,
-        imagePreview: reader.result as string,
+        imagePreview: imageUrl,
       }));
-    };
 
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      alert("Image upload failed");
+    }
   };
 
   // SAVE PRODUCT
@@ -163,6 +186,7 @@ export default function AdminPanel() {
           ? "Product Updated!"
           : "Product Added!"
       );
+
     } catch (err) {
       console.error(err);
       alert("Something went wrong");
@@ -175,7 +199,8 @@ export default function AdminPanel() {
   const deleteProduct = async (
     id: number
   ) => {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm("Delete this product?"))
+      return;
 
     try {
       await fetch(
@@ -190,6 +215,7 @@ export default function AdminPanel() {
       );
 
       await fetchProducts();
+
     } catch (err) {
       console.error(err);
     }
@@ -232,6 +258,7 @@ export default function AdminPanel() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full">
+
           <h1 className="text-4xl font-bold text-center mb-2">
             TESSY LUXE
           </h1>
@@ -260,6 +287,7 @@ export default function AdminPanel() {
           >
             Login
           </Button>
+
         </div>
       </div>
     );
@@ -268,8 +296,10 @@ export default function AdminPanel() {
   // MAIN PAGE
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
+
       {/* HEADER */}
       <div className="flex justify-between items-center mb-10">
+
         <h1 className="text-4xl font-bold">
           Admin Dashboard
         </h1>
@@ -282,10 +312,12 @@ export default function AdminPanel() {
         >
           Logout
         </Button>
+
       </div>
 
       {/* FORM */}
       <div className="bg-white p-8 rounded-2xl shadow mb-12">
+
         <h2 className="text-2xl font-semibold mb-6">
           {editingId
             ? "Edit Product"
@@ -293,6 +325,7 @@ export default function AdminPanel() {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-6">
+
           <Input
             placeholder="Product Name"
             value={form.name}
@@ -326,12 +359,22 @@ export default function AdminPanel() {
             }
             className="border rounded-xl px-4 py-3"
           >
-            <option value="Clothes">Clothes</option>
-            <option value="Bags">Bags</option>
-            <option value="Shoes">Shoes</option>
+            <option value="Clothes">
+              Clothes
+            </option>
+
+            <option value="Bags">
+              Bags
+            </option>
+
+            <option value="Shoes">
+              Shoes
+            </option>
+
             <option value="Accessories">
               Accessories
             </option>
+
           </select>
 
           <select
@@ -344,9 +387,18 @@ export default function AdminPanel() {
             }
             className="border rounded-xl px-4 py-3"
           >
-            <option value="Women">Women</option>
-            <option value="Men">Men</option>
-            <option value="Unisex">Unisex</option>
+            <option value="Women">
+              Women
+            </option>
+
+            <option value="Men">
+              Men
+            </option>
+
+            <option value="Unisex">
+              Unisex
+            </option>
+
           </select>
 
           <select
@@ -359,6 +411,7 @@ export default function AdminPanel() {
             }
             className="border rounded-xl px-4 py-3"
           >
+
             <option value="">
               Select Size
             </option>
@@ -371,6 +424,7 @@ export default function AdminPanel() {
                 {s}
               </option>
             ))}
+
           </select>
 
           <Input
@@ -386,6 +440,7 @@ export default function AdminPanel() {
 
           {/* IMAGE */}
           <div className="md:col-span-2">
+
             <label className="block mb-2">
               Product Image
             </label>
@@ -404,6 +459,7 @@ export default function AdminPanel() {
                 className="mt-4 h-60 object-cover rounded-lg border"
               />
             )}
+
           </div>
 
           <Textarea
@@ -417,6 +473,7 @@ export default function AdminPanel() {
               })
             }
           />
+
         </div>
 
         <Button
@@ -430,6 +487,7 @@ export default function AdminPanel() {
             ? "Update Product"
             : "Add Product"}
         </Button>
+
       </div>
 
       {/* PRODUCTS */}
@@ -438,11 +496,14 @@ export default function AdminPanel() {
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         {products.map((product) => (
+
           <div
             key={product.id}
             className="bg-white rounded-2xl overflow-hidden shadow border"
           >
+
             <img
               src={
                 product.images ||
@@ -453,6 +514,7 @@ export default function AdminPanel() {
             />
 
             <div className="p-5">
+
               <h3 className="font-semibold">
                 {product.name}
               </h3>
@@ -465,6 +527,7 @@ export default function AdminPanel() {
               </p>
 
               <div className="flex gap-3 mt-6">
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -484,10 +547,14 @@ export default function AdminPanel() {
                 >
                   Delete
                 </Button>
+
               </div>
+
             </div>
           </div>
+
         ))}
+
       </div>
     </div>
   );
