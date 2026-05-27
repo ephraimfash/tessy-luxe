@@ -82,118 +82,135 @@ export default function AdminPanel() {
   }, []);
 
   // HANDLE IMAGE UPLOAD
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
+ const handleImageUpload = async (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    // LIMIT SIZE
-    if (file.size > 2000000) {
-      alert("Image too large. Use image below 2MB.");
-      return;
-    }
+  try {
+    // LOCAL PREVIEW FIRST
+    const localPreview = URL.createObjectURL(file);
 
-    try {
-      const fileName = `${Date.now()}-${file.name}`;
+    setForm((prev) => ({
+      ...prev,
+      imagePreview: localPreview,
+    }));
 
-      const uploadRes = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/products/${fileName}`,
-        {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-            "Content-Type": file.type,
-          },
-          body: file,
-        }
-      );
+    // UPLOAD TO SUPABASE
+    const fileName = `${Date.now()}-${file.name}`;
 
-      if (!uploadRes.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const imageUrl =
-        `${SUPABASE_URL}/storage/v1/object/public/products/${fileName}`;
-
-      setForm((prev) => ({
-        ...prev,
-        imagePreview: imageUrl,
-      }));
-
-    } catch (err) {
-      console.error(err);
-      alert("Image upload failed");
-    }
-  };
-
-  // SAVE PRODUCT
-  const saveProduct = async () => {
-    if (
-      !form.name ||
-      !form.price ||
-      !form.description ||
-      !form.imagePreview
-    ) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    setLoading(true);
-
-    const payload = {
-      name: form.name,
-      price: Number(form.price),
-      category: form.category,
-      gender: form.gender,
-      size: form.size || null,
-      color: form.color || null,
-      description: form.description,
-      images: form.imagePreview,
-    };
-
-    try {
-      const method =
-        editingId ? "PATCH" : "POST";
-
-      const url = editingId
-        ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}`
-        : `${SUPABASE_URL}/rest/v1/products`;
-
-      const res = await fetch(url, {
-        method,
+    const uploadRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/products/${fileName}`,
+      {
+        method: "POST",
         headers: {
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
+          "Content-Type": file.type,
         },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save product");
+        body: file,
       }
+    );
 
-      await fetchProducts();
-
-      resetForm();
-
-      alert(
-        editingId
-          ? "Product Updated!"
-          : "Product Added!"
-      );
-
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+    if (!uploadRes.ok) {
+      throw new Error("Upload failed");
     }
 
-    setLoading(false);
+    const finalUrl =
+      `${SUPABASE_URL}/storage/v1/object/public/products/${fileName}`;
+
+    setForm((prev) => ({
+      ...prev,
+      imagePreview: finalUrl,
+    }));
+
+  } catch (err) {
+    console.error(err);
+    alert("Image upload failed");
+  }
+};
+
+  // SAVE PRODUCT
+  const saveProduct = async () => {
+  if (!form.name.trim()) {
+    alert("Product name required");
+    return;
+  }
+
+  if (!form.price) {
+    alert("Price required");
+    return;
+  }
+
+  if (!form.description.trim()) {
+    alert("Description required");
+    return;
+  }
+
+  if (!form.imagePreview) {
+    alert("Please upload an image first");
+    return;
+  }
+
+  setLoading(true);
+
+  const payload = {
+    name: form.name,
+    price: Number(form.price),
+    category: form.category,
+    gender: form.gender,
+    size: form.size || "",
+    color: form.color || "",
+    description: form.description,
+    images: form.imagePreview,
   };
+
+  try {
+    const method = editingId ? "PATCH" : "POST";
+
+    const url = editingId
+      ? `${SUPABASE_URL}/rest/v1/products?id=eq.${editingId}`
+      : `${SUPABASE_URL}/rest/v1/products`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    console.log(data);
+
+    if (!res.ok) {
+      console.log(data);
+      throw new Error("Failed");
+    }
+
+    await fetchProducts();
+
+    resetForm();
+
+    alert(
+      editingId
+        ? "Product Updated!"
+        : "Product Added!"
+    );
+
+  } catch (err) {
+    console.error(err);
+    alert("Save failed. Check console.");
+  }
+
+  setLoading(false);
+};
 
   // DELETE PRODUCT
   const deleteProduct = async (
